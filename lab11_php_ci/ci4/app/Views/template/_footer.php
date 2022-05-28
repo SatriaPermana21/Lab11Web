@@ -14,7 +14,7 @@
         </aside>
     </section>
     <footer>
-        <p>&copy; 2022 | Alingga Reandito</p>
+        <p>&copy; 2022 | M Safri Satria Permana</p>
     </footer>
     </div>
 </body>

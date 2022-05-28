@@ -1,5 +1,5 @@
 <footer class="bg-dark text-white p-3 text-center">
-    <p class="m-0">&copy; 2022 - Universitas Pelita Bangsa @ Alingga Reandito</p>
+    <p class="m-0">&copy; 2022 - Universitas Pelita Bangsa @ M Safri Satria Permana</p>
 </footer>
 
 

@@ -1,8 +1,8 @@
 ## Profil
 | # | Biodata |
 | -------- | --- |
-| **Nama** | Alingga Reandito |
-| **NIM** | 312010276 |
+| **Nama** | Muhammad Safri Satria Permana |
+| **NIM** | 312010337 |
 | **Kelas** | TI.20.A.2 |
 | **Mata Kuliah** | Pemrograman Web |
 
@@ -245,7 +245,7 @@ File **app/view/template/footer.php**
         </aside>
     </section>
     <footer>
-        <p>&copy; 2022 | Alingga Reandito</p>
+        <p>&copy; 2022 | M Safri Satria Permana</p>
     </footer>
     </div>
 </body>

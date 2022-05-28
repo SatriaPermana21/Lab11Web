@@ -10,8 +10,8 @@
     <section id="about">
         <div class="bio">
             <img src="Alingga_Reandito.JPG" alt="" >
-            <h2>Alingga Reandito</h2>
-            <p class="p-bio">Perkenalkan saya Alingga Reandito, saya sedang belajar memahami HTML, CSS, dan JS</p>
+            <h2>M Safri Satria Permana</h2>
+            <p class="p-bio">Perkenalkan saya M Safri Satria Permana, saya sedang belajar memahami HTML, CSS, dan JS</p>
         </div>
     </section>
 
