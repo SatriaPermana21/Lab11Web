@@ -245,7 +245,7 @@ File **app/view/template/footer.php**
         </aside>
     </section>
     <footer>
-        <p>&copy; 2022 | Humam Fathurrahman</p>
+        <p>&copy; 2022 | Alingga Reandito</p>
     </footer>
     </div>
 </body>
