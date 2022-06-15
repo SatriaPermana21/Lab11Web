@@ -281,3 +281,565 @@ Untuk halaman **About**
 Untuk halaman **Kontak**
 
 ![HalKontak](img/tugaskontak.png)
+
+## Tugas Lab 11 Web (Pratikum 12 CRUD)
+# Langkah 1 `Membuat DB`
+
+1. Buat database baru dengan nama `lab_ci4` dengan query berikut.
+
+```
+CREATE DATABASE lab_ci4;
+```
+
+2. Membuat Table baru dengan nama `artikel` dengan query berikut.
+
+```
+CREATE TABLE artikel {
+    id INT(11) auto_increment,
+    judul VARCHAR(200) NOT NULL,
+    isi TEXT,
+    gambar VARCHAR(200),
+    status TINYINT(1) DEFAULT 0,
+    slug VARCHAR(200),
+    PRIMARY KEY(id)
+}
+```
+
+## Langkah 2 Konfigurasi koneksi database
+
+1. Buka file `.env`, lalu edit seperti berikut.
+![img](img/ss_env.png)
+
+## Langkah 3 `Membuat Model`
+
+1. Buat file baru dengan nama `ArtikelModel.php` pada direktori `app/Models`.
+2. Tambahkan kode berikut.
+
+```
+<?php
+namespace App\Models;
+use CodeIgniter\Model;
+
+class ArtikelModel extends Model {
+    protected $table = 'artikel';
+    protected $primary = 'id';
+    protected $setAutoIncrement = TRUE;
+    protected $allowedFields = ['judul', 'isi', 'status', 'slug', 'gambar', 'date_created'];
+}
+```
+
+## Langkah 4 Membuat Controller
+
+1. Buat file baru dengan nnama `Artikel.php` pada direktori `app/Controller`.
+2. Tambahkan kode berikut.
+
+```
+<?php
+
+namespace App\Controllers;
+
+use App\Models\ArtikelModel;
+use CodeIgniter\Controller;
+use CodeIgniter\Exceptions\PageNotFoundException;
+use CodeIgniter\I18n\Time;
+
+class Artikel extends Controller
+{
+    protected $artikel;
+
+    public function __construct()
+    {
+        $this->artikel = new ArtikelModel();
+    }
+
+    public function index()
+    {
+        $title = 'Daftar Artikel';
+        $artikels = $this->artikel->findAll();
+
+        return view('artikel/home', compact('title', 'artikels'));
+    }
+}
+```
+
+## Langkah 5 `Membuat View`
+
+1. Buat file baru dengan nama `home.php` pada direktori `app/Views/artikel`.
+2. Tambahkan kode berikut.
+
+```
+<?= $this->include('template/_header.php'); ?>
+
+<h1 class="display-4">Artikel</h1>
+
+<?php if ($artikels) : foreach ($artikels as $artikel) : ?>
+        <div class="card">
+            <div class="card-header">
+                <h2><a href="<?= base_url('artikel/') . $artikel['slug'] ?>"><?= $artikel['judul'] ?></a></h2>
+            </div>
+
+            <div class="card-body">
+                <p><?= substr($artikel['isi'], 0, 200) ?></p>
+            </div>
+        </div>
+    <?php endforeach;
+else : ?>
+<div class="card">
+    <div class="card-body">Belum ada data</div>
+</div>
+<?php endif; ?>
+
+<?= $this->include('template/_footer.php'); ?>
+```
+3. Maka hasilnya akan seperti berikut.
+![img](img/ss_read.png)
+
+4. Karena datanya belum ada, kita tambah data dengan menjalankan query berikut diphpmyadmin.
+
+```
+INSERT INTO artikel (judul, isi, slug) VALUE
+('Artikel pertama', 'Lorem Ipsum adalah contoh teks atau dummy dalam industri
+percetakan dan penataan huruf atau typesetting. Lorem Ipsum telah menjadi
+standar contoh teks sejak tahun 1500an, saat seorang tukang cetak yang tidak
+dikenal mengambil sebuah kumpulan teks dan mengacaknya untuk menjadi sebuah
+buku contoh huruf.', 'artikel-pertama'),
+('Artikel kedua', 'Tidak seperti anggapan banyak orang, Lorem Ipsum bukanlah
+teks-teks yang diacak. Ia berakar dari sebuah naskah sastra latin klasik dari
+era 45 sebelum masehi, hingga bisa dipastikan usianya telah mencapai lebih
+dari 2000 tahun.', 'artikel-kedua');
+```
+
+5. Maka hasilnya seperti berikut.
+![img](img/ss_read-2.png)
+
+## Langkah 6 `Detail View`
+
+1. Tambahkan method baru dengan nama `detail_artikel($slug)` pada Controller `Artikel.php`
+2. Maka kodenya seperti berikut.
+
+```
+public function detail_artikel($slug)
+{
+    $artikel = $this->artikel->where([
+        'slug' => $slug
+    ])->first();
+
+    if (!$artikel) {
+        throw PageNotFoundException::forPageNotFound();
+    }
+    $title = $artikel['judul'];
+
+    return view('artikel/detail_artikel', compact('title', 'artikel'));
+}
+```
+
+3. Tambahkan Routes baru dengan kode seperti berikut.
+
+```
+$routes->get('/artikel/(:any)', 'Artikel::detail_artikel/$1');
+```
+
+4. Buat file baru dengan nama `detail_artikel.php` didalam direktori `app/Views/artikel`.
+5. Tambahkan kode berikut.
+
+```
+<?= $this->include('template/_header.php'); ?>
+
+<h1 class="display-4" style="font-size: 36px;">Detail <?= $artikel['judul'] ?></h1>
+
+<div class="card my-3">
+    <div class="card-header">
+        <h4><?= $artikel['judul'] ?></h4>
+    </div>
+
+    <div class="card-body">
+        <!-- <img src="<?= base_url() . '/gambar/' . $artikel['gambar'] ?>" alt="<?= $artikel['judul'] ?>"> -->
+        <p><?= $artikel['isi'] ?></p>
+    </div>
+
+    <div class="card-footer text-center">
+        <?= $artikel['date_created'] ?>
+    </div>
+</div>
+
+<?= $this->include('template/_footer.php'); ?>
+```
+
+6. Maka hasilnya sebagai berikut.
+![img](img/detail_artikel.png)
+
+## Langkah `Membuat Menu Admin`
+
+1. Buat method baru dengan nama `admin()` didalam Controller `Artikel`.
+2. Tambahkan kode berikut.
+
+```
+public function admin()
+{
+    $title = 'Daftar Artikel';
+    $artikel = $this->artikel->findAll();
+
+    return view('artikel/admin', compact('title', 'artikel'));
+}
+```
+
+3. Tambahkan route baru seperti berikut.
+
+```
+$routes->group('artikel/admin', function($routes) {
+    $routes->get('/', 'Artikel::admin');
+
+    // Add
+    $routes->get('add', 'Artikel::add_artikel');
+    $routes->add('store', 'Artikel::store');
+
+    // Edit
+    $routes->get('edit/(:any)', 'Artikel::edit/$1');
+    $routes->add('update/(:any)', 'Artikel::update/$1');
+
+    // Delete
+    $routes->get('delete/(:any)', 'Artikel::delete/$1');
+});
+```
+
+4. Buat 2 file template dengan nama `admin_header.php` dan `admin_footer.php` didalam direktor `app/Views/template`
+
+```
+// admin_header.php
+<?php
+
+use CodeIgniter\Config\Services;
+
+$request = Services::request();
+?>
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="<?= base_url('css/bootstrap.min.css') ?>">
+
+    <!-- My CSS -->
+    <!-- <link rel="stylesheet" href="<?= base_url('css/style_admin.css') ?>"> -->
+
+    <title>Admin | <?= $title ?></title>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark p-0" style="background-color: purple;">
+        <div class="container p-0">
+            <a class="navbar-brand" href="<?= base_url('artikel/admin') ?>">Admin</a>
+            <button class="navbar-toggler ms-auto m-1" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link <?= $request->uri->getSegment(3) == '' ? 'active' : '' ?>" href="<?= base_url('artikel/admin') ?>">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $request->uri->getSegment(3) == 'artikel' ? 'active' : '' ?>" href="<?= base_url('artikel') ?>">Artikel</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <?php
+    if (session()->getFlashdata('errors')) {
+    ?>
+        <div class="alert alert-danger alert-dismissible fade show pb-0" role="alert">
+            <div class="container">
+                <?= session()->getFlashdata('errors') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    <?php
+    } else if (session()->getFlashdata('success')) {
+    ?>
+        <div class="alert alert-primary alert-dismissible fade show" role="alert">
+            <div class="container">
+                <?= session()->getFlashdata('success') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    <?php } ?>
+```
+
+```
+// admin_footer.php
+<footer class="bg-dark text-white p-3 text-center">
+    <p class="m-0">&copy; 2022 - Universitas Pelita Bangsa @ Reza Riyaldi</p>
+</footer>
+
+
+<script src="<?= base_url('js/bootstrap.min.js') ?>"></script>
+</body>
+
+</html>
+```
+
+5. Buat file baru dengan nama `admin.php` didalam direktori `app/Views/artikel`, dan tambahkan kode berikut.
+
+```
+<?= $this->include('template/admin_header.php'); ?>
+
+<div class="container py-5">
+    <h1 class="display-4 d-inline" style="font-size: 36px; border-bottom: 5px solid #ddd;"><?= $title ?></h1>
+
+    <a href="<?= base_url('artikel/admin/add') ?>" class="btn btn-primary btn-sm d-block mt-4">+ Tambah Artikel</a>
+    <table class="table table-hover table-bordered">
+        <thead>
+            <tr class="text-center">
+                <th>No</th>
+                <th>Judul</th>
+                <th>Status</th>
+                <th>Option</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <?php
+            $no = 1;
+            if ($artikels) {
+                foreach ($artikels as $artikel) { ?>
+                    <tr>
+                        <td class="text-center" style="vertical-align: middle;"><?= $no++ ?></td>
+                        <td>
+                            <b class="d-block"><?= $artikel['judul'] ?></b>
+                            <small><?= substr($artikel['isi'], 0, 50) ?></small>
+                        </td>
+                        <td class="text-center" style="vertical-align: middle;"><?= $artikel['status'] ?></td>
+                        <td class="text-center" style="vertical-align: middle;">
+                            <a href="<?= base_url() . '/artikel/admin/edit/' . $artikel['slug'] ?>" class="btn btn-warning btn-sm">Edit</a>
+                            <a href="<?= base_url() . '/artikel/admin/delete/' . $artikel['slug'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Apakah anda yakin ingin menghapus <?= $artikel['judul'] ?>?')">Delete</a>
+                        </td>
+                    </tr>
+                <?php }
+            } else { ?>
+                <tr>
+                    <td colspan="4" class="text-center">Data masih kosong</td>
+                </tr>
+            <?php } ?>
+        </tbody>
+
+        <!-- <tfoot>
+            <tr>
+                <th>No</th>
+                <th>Judul</th>
+                <th>Status</th>
+                <th>Option</th>
+            </tr>
+        </tfoot> -->
+    </table>
+</div>
+
+<?= $this->include('template/admin_footer.php'); ?>
+```
+
+6. Maka hasilnya seperti berikut.
+![img](img/daftar_artikel_admin.png)
+
+## Langkah 8 `Add Artikel`
+
+1. Buat 2 Method baru dengan nama `add_artikel()`, `store()` didalam Controller `Artikel`.
+2. Tambahkan kode berikut.
+
+```
+public function add_artikel()
+{
+
+    $title = 'Tambah Artikel';
+    return view('artikel/tambah_artikel', compact('title'));
+}
+
+public function store()
+{
+    if (!$this->validate([
+        'judul' => [
+            'rules' => 'required',
+            'errors' => [
+                'required' => 'Judulnya diisi dong sayang'
+            ],
+        ],
+        'isi' => [
+            'rules' => 'min_length[10]',
+            'errors' => [
+                'min_length' => 'Minimal 10 karakter aja kok, yok bisa yok'
+            ]
+        ]
+    ])) {
+        session()->setFlashdata('errors', $this->validator->listErrors());
+        redirect()->back()->withInput();
+    }
+
+    // var_dump($this->request->getPost()); die();
+
+    $this->artikel->insert([
+        'judul' => ucwords(strtolower($this->request->getPost('judul'))),
+        'isi' => $this->request->getPost('isi'),
+        'slug' => url_title(strtolower($this->request->getPost('judul'))),
+    ]);
+
+    session()->setFlashdata('success', 'Berhasil menambah data');
+    return redirect()->to('artikel/admin');
+}
+```
+
+3. Buat file baru dengan nama `tambah_artikel.php` didalam direktori `app/Views/artikel`, lalu tambahkan kode berikut.
+
+```
+<?= $this->include('template/admin_header'); ?>
+
+<div class="container py-5">
+    <h1 class="display-4 d-inline" style="font-size: 36px; border-bottom: 5px solid #ddd;">Tambah Artikel</h1>
+
+    <div class="row m-0 mt-4">
+        <div class="col-md-6 p-0">
+            <div class="card">
+                <div class="card-body">
+                    <form action="<?= base_url('artikel/admin/store') ?>" method="post">
+                        <div class="mb-3">
+                            <label for="" class="form-label">Judul</label>
+                            <input type="text" class="form-control" name="judul" placeholder="Masukan judul yang menarik" value="<?= old('judul') ?>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="" class="form-label">Isi</label>
+                            <textarea name="isi" id="" cols="" rows="" placeholder="Buatlah artikel yang menarik" class="form-control"><?= old('isi') ?></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Tambah Artikel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?= $this->include('template/admin_footer'); ?>
+```
+
+4. Maka hasilnya sebagai berikut.
+![img](img/tambah_artikel.png)
+
+5. Apabila ada kesalahan.
+![img](img/form_error.png)
+
+6. Apabila berhasil
+![img](img/add_form_success.png)
+
+## Langkah 9 `Update Artikel`
+
+1. Buat 2 method baru dengan nama `edit(slug)` dan `update($id)` didalam Controller `Artikel`, Tambahkan kode berikut.
+
+```
+public function edit($slug)
+{
+    $data =[
+        'title' => 'Edit Artikel',
+        'artikel' => $this->artikel->where('slug', $slug)->first()
+    ];
+
+    return view('artikel/edit_artikel', $data);
+}
+
+public function update($id)
+{
+    if (!$this->validate([
+        'judul' => [
+            'rules' => 'required',
+            'errors' => [
+                'required' => 'Judulnya diisi dong sayang'
+            ],
+        ],
+        'isi' => [
+            'rules' => 'min_length[10]',
+            'errors' => [
+                'min_length' => 'Isi konten 10 karakter aja kok, yok bisa yok'
+            ]
+        ]
+    ])) {
+        session()->setFlashdata('errors', $this->validator->listErrors());
+        return redirect()->back();
+    }
+
+    $this->artikel->update($id, [
+        'judul' => ucwords(strtolower($this->request->getPost('judul'))),
+        'isi' => $this->request->getPost('isi'),
+        'slug' => url_title(strtolower($this->request->getPost('judul')))
+    ]);
+
+    session()->setFlashdata('success', 'Berhasil mengubah data');
+    return redirect()->to('artikel/admin');
+}
+```
+
+2. Tambahkan file baru dengan nama `edit_artikel.php` didalam direktori `app/Views/artikel`, lalu tambahkan kode berikut.
+
+```
+<?= $this->include('template/admin_header'); ?>
+
+<div class="container py-5">
+    <h1 class="display-4 d-inline" style="font-size: 36px; border-bottom: 5px solid #ddd;">Edit Artikel</h1>
+
+    <div class="row m-0 mt-4">
+        <div class="col-md-6 p-0">
+            <div class="card">
+                <div class="card-body">
+                    <form action="<?= base_url(). '/artikel/admin/update/' . $artikel['id'] ?> " method="post">
+                        <div class="mb-3">
+                            <label for="" class="form-label">Judul</label>
+                            <input type="text" class="form-control" name="judul" placeholder="Masukan judul yang menarik" value="<?= $artikel['judul'] ?>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="" class="form-label">Isi</label>
+                            <textarea name="isi" id="" cols="" rows="" placeholder="Buatlah artikel yang menarik" class="form-control"><?= $artikel['isi'] ?></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Edit Artikel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?= $this->include('template/admin_footer'); ?>
+```
+
+3. Maka hasilnya akan seperti berikut.
+![img](img/edit_form.png)
+
+4. Apabila berhasil maka hasilnya seperti berikut.
+![img](img/edit_form_success.png)
+
+## Langkah 10 `Delete Artikel`
+
+1. Tambahkan method baru dengan nama `delete($slug)` didalam Controller `Artikel`, lalu tambahkan kode berikut.
+
+```
+public function delete($slug)
+{
+    if($this->artikel->where('slug', $slug)->first() === NULL) {
+        throw PageNotFoundException::forPageNotFound('Data tidak ditemukan!');
+    }
+
+    $this->artikel->where('slug', $slug)->delete();
+
+    session()->setFlashdata('success', 'Berhasil hapus data');
+    return redirect('artikel/admin');
+}
+```
+
+2. Maka ketika tombol delete diklik, akan seperti berikut.
+![img](img/delete.png)
+
+3. Apabila yes akan seperti berikut.
+![img](img/delete_success.png)

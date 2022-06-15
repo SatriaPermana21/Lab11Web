@@ -39,6 +39,22 @@ $routes->get('/', 'Home::index');
 $routes->get('/about', 'Page::about');
 $routes->get('/contact', 'Page::contact');
 $routes->get('/faqs', 'Page::faqs');
+$routes->group('/artikel/admin', function($routes) {
+    $routes->get('/', 'Artikel::admin');
+
+    // Add
+    $routes->get('add', 'Artikel::add_artikel');
+    $routes->add('store', 'Artikel::store');
+
+    // Edit
+    $routes->get('edit/(:any)', 'Artikel::edit/$1');
+    $routes->add('update/(:any)', 'Artikel::update/$1');
+
+    // Delete
+    $routes->get('delete/(:any)', 'Artikel::delete/$1');
+});
+$routes->get('/artikel/(:any)', 'Artikel::detail_artikel/$1');
+
 $routes->setAutoRoute(true);
 
 /*
